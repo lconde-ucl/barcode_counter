@@ -1,0 +1,6 @@
+#File	results/L1/3_bbmerge/L1_merged.fq
+#Total	86561
+#Matched	7102	8.20462%
+#Name	Reads	ReadsPct
+ barcode2	3607	4.16700%
+ barcode1	3495	4.03762%
