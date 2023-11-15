@@ -1,0 +1,198 @@
+#!/bin/bash -l
+
+
+
+# ========================================================================
+#  NAME: BarcodeCounter
+# ========================================================================
+#
+# ========================================================================
+# USAGE: qsub -t i-j barcode_counter.qsub INPUTDIR SAMPLESFILE BARCODEFILE BARCODELENGTH
+# EXAMPLE: qsub -t 1-5 barcode_counter.qsub fastqs/ samples.txt barcodes.fa 15
+# PIPELINE: 
+#       fastQC
+#       TrimGalore
+#       bbMerge
+#       bbDuk
+# ASSUMES:
+#       There is an INPUTDIR folder with the fastq files named:
+#           INPUTDIR/SAMPLE_R1_001.fastq.gz
+#           INPUTDIR/SAMPLE_R2_001.fastq.gz
+#       Paired
+#       phred33
+# NEEDS:
+#       1- A SAMPLESFILE file with format: SAMPLE_ID:
+#       	L1
+#       	L2
+#       	[...]
+#       2- A BARCODEFILE file in fasta format
+#		> barcode1
+#		cctagccgctatatt
+#		> barcode2
+#		tcttcaggacttagt       	
+#       	[...]
+# ========================================================================
+
+
+
+#$ -S /bin/bash
+#$ -l h_rt=1:00:00
+#$ -l mem=10G
+#$ -l tmpfs=10G
+#$ -cwd
+#$ -N BARCODECOUNTER
+
+set -o pipefail
+
+
+module purge
+module load blic-modules bbmap/39.04
+module load fastqc/0.11.8
+module load python3/recommended
+module load trim_galore/0.6.10
+
+
+inputfiles=$1
+samplefile=$2
+barcodefile=$3
+barcodelength=$4
+
+number=$SGE_TASK_ID
+sample_name=`sed -n ${number}p $samplefile | awk '{print $1}'`
+
+
+fastq1="${inputfiles}/${sample_name}_R1_001.fastq.gz"
+fastq2="${inputfiles}/${sample_name}_R2_001.fastq.gz"
+
+
+## Sets the name of the output file for the times command
+if [[ ! $SGE_TASK_ID ]]; then \
+  TIMES_FILE=.times.$JOB_NAME.$JOB_ID
+else
+  TIMES_FILE=.times.$JOB_NAME.$JOB_ID.$SGE_TASK_ID
+fi
+ 
+## Required by function die
+trap "exit 1" TERM
+export TOP_PID=$$
+ 
+function die {
+  echo "******************************************************"
+  echo "["`date`"] ERROR while running $1"
+  echo "******************************************************"
+  cat $TIMES_FILE
+  rm $TIMES_FILE
+  kill -s TERM $TOP_PID
+}
+ 
+function run {
+  echo ""
+  echo "======================================================"
+  echo "["`date`"] Starting $1"
+  echo " $*"
+  echo "======================================================"
+
+  cmd=""
+  out=""
+  mode="cmd"
+  for arg in $*; do
+    if [ $arg == ">" ]; then mode="out"; else
+      if [ $mode == "cmd" ]; then cmd="$cmd $arg"; else out=$arg; fi
+    fi
+  done
+
+  if [ $mode == "out" ]
+  then
+    if ! /usr/bin/time -va -o $TIMES_FILE \
+      $cmd > $out
+    then
+      die $*
+    fi
+  else
+    if ! /usr/bin/time  -va -o $TIMES_FILE \
+      $*
+    then
+      die $*
+    fi
+  fi
+}
+
+
+echo "======================================================"
+echo " HOST: "`hostname`
+echo " TIME: "`date`
+echo " ARGS: $*"
+echo "======================================================"
+
+
+DATA_DIR=$PWD/outputfiles/$sample_name
+run "mkdir -p ${DATA_DIR}"
+
+#------------#
+#-- FastQC --#
+#------------#
+mkdir -p "${DATA_DIR}/1_fastqc"
+if [ -e $DATA_DIR/1_fastqc/${sample_name}_R1_001_fastqc.html -a -e $DATA_DIR/1_fastqc/${sample_name}_R1_001_fastqc.html \
+        -a -e $DATA_DIR/1_fastqc/${sample_name}_R2_001_fastqc.zip -a -e $DATA_DIR/1_fastqc/${sample_name}_R2_001_fastqc.zip ]; then
+  run echo "FastQC already completed for ${sample_name}, skipping..."
+else
+  run "fastqc $fastq1 -o ${DATA_DIR}/1_fastqc"
+  run "fastqc $fastq2 -o ${DATA_DIR}/1_fastqc"
+fi
+
+
+#-----------------#
+#-- Trim_galore --#
+#-----------------#
+mkdir -p "${DATA_DIR}/2_trim_galore"
+
+if [ -e $DATA_DIR/2_trim_galore/${sample_name}_R1_001_val_1.fq.gz -a -e $DATA_DIR/2_trim_galore/${sample_name}_R2_001_val_2.fq.gz \
+        -a -e $DATA_DIR/2_trim_galore/${sample_name}_R1_001.fastq.gz_trimming_report.txt -a -e $DATA_DIR/2_trim_galore/${sample_name}_R2_001.fastq.gz_trimming_report.txt \
+        -a -e $DATA_DIR/2_trim_galore/${sample_name}_R1_001_val_1_fastqc.html -a -e $DATA_DIR/2_trim_galore/${sample_name}_R2_001_val_2_fastqc.html \
+        -a -e $DATA_DIR/2_trim_galore/${sample_name}_R1_001_val_1_fastqc.zip -a -e $DATA_DIR/2_trim_galore/${sample_name}_R2_001_val_2_fastqc.zip ]; then
+  run echo "TrimGalore already completed for ${sample_name}, skipping..."
+else
+  run "trim_galore --fastqc --gzip $fastq1 $fastq2 --paired --phred33 -o ${DATA_DIR}/2_trim_galore";
+fi
+
+
+#-------------#
+#-- bbMerge --#
+#-------------#
+mkdir -p "${DATA_DIR}/3_bbmerge"
+
+if [ -e ${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ]; then
+  run echo "bbMerge already completed for ${sample_name}, skipping..."
+else
+  run "bbmerge.sh in1=$DATA_DIR/2_trim_galore/${sample_name}_R1_001_val_1.fq.gz in2=$DATA_DIR/2_trim_galore/${sample_name}_R2_001_val_2.fq.gz out=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq outu1=${DATA_DIR}/3_bbmerge/${sample_name}_unmerged1.fq outu2=${DATA_DIR}/3_bbmerge/${sample_name}_unmerged2.fq
+fi
+
+
+#-------------#
+#-- bbDuk --#
+#-------------#
+mkdir -p "${DATA_DIR}/4_bbduk"
+
+if [ -e ${DATA_DIR}/4_bbduk/${sample_name}_stats.txt ]; then
+  run echo "bbDuk already completed for ${sample_name}, skipping..."
+else
+  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt
+fi
+
+
+echo
+echo "======================================================"
+echo "["`date`"] times:"
+echo "======================================================"
+cat $TIMES_FILE
+rm $TIMES_FILE
+echo "------------------------------------------------------"
+echo
+echo "======================================================"
+echo "["`date`"] Done."
+echo "======================================================"
+
+
+
+
+
