@@ -36,14 +36,16 @@ qsub -t i-j barcode_counter.qsub \\\
 &nbsp;&nbsp;INPUTDIR \\\
 &nbsp;&nbsp;SAMPLESFILE \\\
 &nbsp;&nbsp;BARCODEFILE \\\
-&nbsp;&nbsp;BARCODELENGTH
+&nbsp;&nbsp;BARCODELENGTH \\\
+&nbsp;&nbsp;OUTPUTDIR
 
 ## EXAMPLE
 
 Assuming you have 5 samples, and the length of your barcodes is 15:
 
 qsub -t 1-5 barcode_counter.qsub \\\
-&nbsp;&nbsp;fastqs samples.txt \\\
+&nbsp;&nbsp;fastqs \\\
+&nbsp;&nbsp;samples.txt \\\
 &nbsp;&nbsp;barcodes.fa \\\
 &nbsp;&nbsp;15 \\\
 &nbsp;&nbsp;results\\
