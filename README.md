@@ -21,9 +21,9 @@ You need to provide:
   * [...]
 * A **BARCODEFILE** file in fasta format, e.g.:
     * \> barcode1
-    * agtgcgtatgga
+    * agtgcgtatggatgc
     * \> barcode2
-    * gtcgtgtagctag
+    * gtcgtgtagctagca
     * [...]
 * Additionally, the pipeline needs a **barcode_length** argument specifying the length of the barcodes (in the above example, 15)
 * Finally, provide an **OUTPUTDIR** name (e.g., "results"), where all the generated output will be stored.
