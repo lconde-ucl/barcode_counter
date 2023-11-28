@@ -16,8 +16,8 @@ You need to provide:
   *  INPUTDIR/SAMPLE2_R2_001.fastq.gz
   *  *  [...]
 * A **SAMPLEFILE** with the sample names, e.g.:
-  * L1
-  * L2
+  * SAMPLE1
+  * SAMPLE2
   * [...]
 * A **BARCODEFILE** file in fasta format, e.g.:
     * \> barcode1
