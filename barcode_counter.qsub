@@ -177,7 +177,7 @@ mkdir -p "${DATA_DIR}/4_bbduk"
 if [ -e ${DATA_DIR}/4_bbduk/${sample_name}_stats.txt ]; then
   run echo "bbDuk already completed for ${sample_name}, skipping..."
 else
-  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt
+  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} maskmiddle=f outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt
 fi
 
 
