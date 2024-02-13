@@ -165,7 +165,7 @@ mkdir -p "${DATA_DIR}/3_bbmerge"
 if [ -e ${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ]; then
   run echo "bbMerge already completed for ${sample_name}, skipping..."
 else
-  run "bbmerge.sh in1=$DATA_DIR/2_trim_galore/${sample_name}_R1_001_val_1.fq.gz in2=$DATA_DIR/2_trim_galore/${sample_name}_R2_001_val_2.fq.gz out=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq outu1=${DATA_DIR}/3_bbmerge/${sample_name}_unmerged1.fq outu2=${DATA_DIR}/3_bbmerge/${sample_name}_unmerged2.fq
+  run "bbmerge.sh in1=$DATA_DIR/2_trim_galore/${sample_name}_R1_001_val_1.fq.gz in2=$DATA_DIR/2_trim_galore/${sample_name}_R2_001_val_2.fq.gz out=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq outu1=${DATA_DIR}/3_bbmerge/${sample_name}_unmerged1.fq outu2=${DATA_DIR}/3_bbmerge/${sample_name}_unmerged2.fq"
 fi
 
 
@@ -177,7 +177,7 @@ mkdir -p "${DATA_DIR}/4_bbduk"
 if [ -e ${DATA_DIR}/4_bbduk/${sample_name}_stats.txt ]; then
   run echo "bbDuk already completed for ${sample_name}, skipping..."
 else
-  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} maskmiddle=f -Xmx24g outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt
+  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} maskmiddle=f -Xmx24g outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt"
 fi
 
 
