@@ -25,7 +25,8 @@ You need to provide:
     * \> barcode2
     * gtcgtgtagctagca
     * [...]
-* Additionally, the pipeline needs a **barcode_length** argument specifying the length of the barcodes (in the above example, 15)
+* A **barcode_length** argument specifying the length of the barcodes (in the above example, 15)
+* The desired hamming distance, e.g., allowed number of mismatches
 * Finally, provide an **OUTPUTDIR** name (e.g., "results"), where all the generated output will be stored.
 
 ## USAGE
@@ -37,17 +38,19 @@ qsub -t i-j barcode_counter.qsub \\\
 &nbsp;&nbsp;SAMPLESFILE \\\
 &nbsp;&nbsp;BARCODEFILE \\\
 &nbsp;&nbsp;BARCODELENGTH \\\
+&nbsp;&nbsp;HDIST \\\
 &nbsp;&nbsp;OUTPUTDIR
 
 ## EXAMPLE
 
-Assuming you have 5 samples, and the length of your barcodes is 15:
+Assuming you have 5 samples, the length of your barcodes is 15, and mismatches are not allowed:
 
 qsub -t 1-5 barcode_counter.qsub \\\
 &nbsp;&nbsp;fastqs \\\
 &nbsp;&nbsp;samples.txt \\\
 &nbsp;&nbsp;barcodes.fa \\\
 &nbsp;&nbsp;15 \\\
+&nbsp;&nbsp;0 \\\
 &nbsp;&nbsp;results\\
 
 

@@ -7,8 +7,8 @@
 # ========================================================================
 #
 # ========================================================================
-# USAGE: qsub -t i-j barcode_counter.qsub INPUTDIR SAMPLESFILE BARCODEFILE BARCODELENGTH OUTPUTDIR
-# EXAMPLE: qsub -t 1-5 barcode_counter.qsub fastqs/ samples.txt barcodes.fa 15 results
+# USAGE: qsub -t i-j barcode_counter.qsub INPUTDIR SAMPLESFILE BARCODEFILE BARCODELENGTH HDIST OUTPUTDIR
+# EXAMPLE: qsub -t 1-5 barcode_counter.qsub fastqs/ samples.txt barcodes.fa 15 0 results
 # PIPELINE: 
 #       fastQC
 #       TrimGalore
@@ -56,7 +56,8 @@ inputfiles=$1
 samplefile=$2
 barcodefile=$3
 barcodelength=$4
-outputdir=$5
+hdist=$5
+outputdir=$6
 
 number=$SGE_TASK_ID
 sample_name=`sed -n ${number}p $samplefile | awk '{print $1}'`
@@ -177,7 +178,7 @@ mkdir -p "${DATA_DIR}/4_bbduk"
 if [ -e ${DATA_DIR}/4_bbduk/${sample_name}_stats.txt ]; then
   run echo "bbDuk already completed for ${sample_name}, skipping..."
 else
-  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} maskmiddle=f -Xmx24g outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt"
+  run "bbduk.sh in=${DATA_DIR}/3_bbmerge/${sample_name}_merged.fq ref=${barcodefile} k=${barcodelength} hdist=${hdist} maskmiddle=f -Xmx24g outm=${DATA_DIR}/4_bbduk/${sample_name}_merged_annotated.fq rename=t stats=${DATA_DIR}/4_bbduk/${sample_name}_stats.txt"
 fi
 
 
